@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity ^0.8.25;
 
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {Initializable} from "./lib/Initializable.sol";
 import {IMaxApyVault, StrategyData} from "./interfaces/IMaxApyVault.sol";
 import {IStrategy} from "./interfaces/IStrategy.sol";
+
+import "forge-std/console.sol";
 
 /**
  * @title MaxStrategist
@@ -105,42 +107,24 @@ contract MaxStrategist is Initializable, OwnableRoles {
     //////////////////////////////////////////////////////////////*/
     /**
      * @dev Orchestrates a batch add strategy for the maxapy protocol.
-     * @param harvests An array of strategy values to add to
+     * @param strategies An array of strategy values to add to
      * the strategy to the vault.
      */
     function batchAddStrategies(
-        address vault,
-        StratData[] calldata harvests
+        IMaxApyVault vault,
+        StratData[] memory strategies 
     ) external checkRoles(KEEPER_ROLE) {
-        uint256 length = harvests.length;
+        uint256 length = strategies.length;
 
-        // Iterate through each strategy in the array in order to call the harvest.
+        // Iterate through each strategy in the array in order to add the strategy .
         for (uint i = 0; i < length; ) {
-            address strategyAddress = harvests[i].strategyAddress;
-            uint256 strategyDebtRatio = harvests[i].strategyDebtRatio;
-            uint256 strategyMaxDebtPerHarvest = harvests[i]
-                .strategyMaxDebtPerHarvest;
-            uint256 strategyMinDebtPerHarvest = harvests[i]
-                .strategyMinDebtPerHarvest;
-            uint256 strategyPerformanceFee = harvests[i].strategyPerformanceFee;
-
-            // Dynamically call the `harvest` function on the target Strategy contract.
-            (bool success, ) = vault.call(
-                abi.encodeWithSignature(
-                    "addStrategy(address,uint256,uint256,uint256,uint256)",
-                    strategyAddress,
-                    strategyDebtRatio,
-                    strategyMaxDebtPerHarvest,
-                    strategyMinDebtPerHarvest,
-                    strategyPerformanceFee
-                )
+            vault.addStrategy(
+                strategies[i].strategyAddress,
+                strategies[i].strategyDebtRatio,
+                strategies[i].strategyMaxDebtPerHarvest,
+                strategies[i].strategyMinDebtPerHarvest,
+                strategies[i].strategyPerformanceFee
             );
-
-            // Check the harvest transaction status.
-            if (!success) {
-                revert AddStrategyFailed();
-            }
-
             // Use unchecked block to bypass overflow checks for efficiency.
             unchecked {
                 i++;

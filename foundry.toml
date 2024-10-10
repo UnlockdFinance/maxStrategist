@@ -1,5 +1,6 @@
 [profile.default]
 solc = '0.8.25'
+evm_version = 'shanghai'
 src = 'src'
 test = 'test'
 script = 'script'
@@ -8,5 +9,11 @@ libs = ['lib']
 remappings = [
 ] 
 fs_permissions = [{ access = "read-write", path = "./"}]
+
+[rpc_endpoints]
+polygon = "${RPC_POLYGON}"
+
+[etherscan]
+polygon = { key = "${POLYGONSCAN_API_KEY}" }
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
