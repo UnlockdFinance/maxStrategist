@@ -2,7 +2,6 @@
 pragma solidity ^0.8.25;
 
 import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
-import {Initializable} from "./lib/Initializable.sol";
 import {IMaxApyVault, StrategyData} from "./interfaces/IMaxApyVault.sol";
 import {IStrategy} from "./interfaces/IStrategy.sol";
 
@@ -12,7 +11,7 @@ import "forge-std/console.sol";
  * @title MaxStrategist
  * @dev This is an internal contract to manage the maxApyVaultStrategies harvest in an atomic way.
  */
-contract MaxStrategist is Initializable, OwnableRoles {
+contract MaxStrategist is OwnableRoles {
     /*//////////////////////////////////////////////////////////////
                              ERRORS
     //////////////////////////////////////////////////////////////*/
@@ -85,8 +84,6 @@ contract MaxStrategist is Initializable, OwnableRoles {
                 ++i;
             }
         }
-
-        _disableInitializers();
     }
 
     /*//////////////////////////////////////////////////////////////
