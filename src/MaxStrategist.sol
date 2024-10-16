@@ -5,11 +5,10 @@ import {OwnableRoles} from "solady/auth/OwnableRoles.sol";
 import {IMaxApyVault, StrategyData} from "./interfaces/IMaxApyVault.sol";
 import {IStrategy} from "./interfaces/IStrategy.sol";
 
-import "forge-std/console.sol";
-
 /**
  * @title MaxStrategist
  * @dev This is an internal contract to manage the maxApyVaultStrategies harvest in an atomic way.
+ * @custom:security-contact security@example.com
  */
 contract MaxStrategist is OwnableRoles {
     /*//////////////////////////////////////////////////////////////
@@ -22,11 +21,14 @@ contract MaxStrategist is OwnableRoles {
     /*//////////////////////////////////////////////////////////////
                               STRUCTS
     //////////////////////////////////////////////////////////////*/
-    // Struct to encapsulate information about an individual NFT transfer.
-    // It needs the strategy address that will harvest from,
-    // who will be the harvester,
-    // the expected balance after the harvest,
-    // the minimum output after the investment,
+    /**
+     * @dev Struct to encapsulate information about the strategy to add.
+     * @param strategyAddress The address of the strategy.
+     * @param strategyDebtRatio The debt ratio for the strategy.
+     * @param strategyMaxDebtPerHarvest The maximum debt per harvest for the strategy.
+     * @param strategyMinDebtPerHarvest The minimum debt per harvest for the strategy.
+     * @param strategyPerformanceFee The performance fee for the strategy.
+     */
     struct StratData {
         address strategyAddress;
         uint256 strategyDebtRatio;
@@ -35,14 +37,15 @@ contract MaxStrategist is OwnableRoles {
         uint256 strategyPerformanceFee;
     }
 
-    // Struct to encapsulate information about an individual NFT transfer.
-    // It needs the strategy address that will harvest from,
-    // who will be the harvester,
-    // the expected balance after the harvest,
-    // the minimum output after the investment,
+    /**
+     * @dev Struct to encapsulate information about an individual harvest.
+     * @param strategyAddress The address of the strategy to harvest from.
+     * @param minExpectedBalance The minimum expected balance after the harvest.
+     * @param minOutputAfterInvestment The minimum output after the investment.
+     * @param deadline The deadline for the harvest operation.
+     */
     struct HarvestData {
         address strategyAddress;
-        address harvester;
         uint256 minExpectedBalance;
         uint256 minOutputAfterInvestment;
         uint256 deadline;
@@ -51,12 +54,19 @@ contract MaxStrategist is OwnableRoles {
     ////////////////////////////////////////////////////////////////
     ///                        CONSTANTS                         ///
     ////////////////////////////////////////////////////////////////
+    // ROLES
     uint256 public constant ADMIN_ROLE = _ROLE_0;
     uint256 public constant KEEPER_ROLE = _ROLE_1;
+    // ACTORS
+    address public constant DEFAULT_HARVESTER = address(0);
 
     ////////////////////////////////////////////////////////////////
     ///                       MODIFIERS                          ///
     ////////////////////////////////////////////////////////////////
+    /**
+     * @dev Modifier to check if the caller has the required roles.
+     * @param roles The roles to check.
+     */
     modifier checkRoles(uint256 roles) {
         _checkRoles(roles);
         _;
@@ -67,7 +77,8 @@ contract MaxStrategist is OwnableRoles {
     //////////////////////////////////////////////////////////////*/
     /**
      * @dev Constructor to set the initial state of the contract.
-     * @param keepers The address of the CryptoPunks contract.
+     * @param admin The address of the admin.
+     * @param keepers An array of addresses for the keepers that will call the contract functions.
      */
     constructor(address admin, address[] memory keepers) {
         // loop to add the keepers to a mapping
@@ -89,12 +100,16 @@ contract MaxStrategist is OwnableRoles {
     /*//////////////////////////////////////////////////////////////
                     Fallback and Receive Functions
     //////////////////////////////////////////////////////////////*/
-    // Explicitly reject any Ether sent to the contract
+    /**
+     * @dev Fallback function to reject any Ether sent to the contract.
+     */
     fallback() external payable {
         revert Fallback();
     }
 
-    // Explicitly reject any Ether transfered to the contract
+    /**
+     * @dev Receive function to reject any Ether transferred to the contract.
+     */
     receive() external payable {
         revert CantReceiveETH();
     }
@@ -104,8 +119,8 @@ contract MaxStrategist is OwnableRoles {
     //////////////////////////////////////////////////////////////*/
     /**
      * @dev Orchestrates a batch add strategy for the maxapy protocol.
-     * @param strategies An array of strategy values to add to
-     * the strategy to the vault.
+     * @param vault The MaxApyVault contract instance.
+     * @param strategies An array of strategy values to add to the vault.
      */
     function batchAddStrategies(
         IMaxApyVault vault,
@@ -130,9 +145,9 @@ contract MaxStrategist is OwnableRoles {
     }
 
     /**
-     * @dev Orchestrates a batch add strategy for the maxapy protocol.
-     * @param harvests An array of strategy values to add to
-     * the strategy to the vault.
+     * @dev Orchestrates a batch remove strategy for the maxapy protocol.
+     * @param vault The MaxApyVault contract instance.
+     * @param harvests An array of harvest data for strategies to remove from the vault.
      */
     function batchRemoveStrategies(
         IMaxApyVault vault,
@@ -160,7 +175,7 @@ contract MaxStrategist is OwnableRoles {
             strategy.harvest(
                 harvests[i].minExpectedBalance,
                 harvests[i].minOutputAfterInvestment,
-                harvests[i].harvester,
+                DEFAULT_HARVESTER,
                 harvests[i].deadline
             );
 

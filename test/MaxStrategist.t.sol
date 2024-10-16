@@ -254,7 +254,6 @@ contract MaxStrategistTest is Test {
             memory harvestData = new MaxStrategist.HarvestData[](1);
         harvestData[0] = MaxStrategist.HarvestData({
             strategyAddress: address(0),
-            harvester: keeper,
             minExpectedBalance: 0,
             minOutputAfterInvestment: 0,
             deadline: block.timestamp
@@ -270,7 +269,6 @@ contract MaxStrategistTest is Test {
         maxStrategist.batchRemoveStrategies(vault, harvestData);
 
         harvestData[0].strategyAddress = address(DAILenderStrategy);
-        harvestData[0].harvester = keeper;
         assertEq(
             vault.hasAnyRole(address(DAILenderStrategy), vault.STRATEGY_ROLE()),
             true
@@ -311,14 +309,12 @@ contract MaxStrategistTest is Test {
             memory harvestData = new MaxStrategist.HarvestData[](2);
         harvestData[0] = MaxStrategist.HarvestData({
             strategyAddress: address(DAILenderStrategy),
-            harvester: keeper,
             minExpectedBalance: 0,
             minOutputAfterInvestment: 0,
             deadline: block.timestamp
         });
         harvestData[1] = MaxStrategist.HarvestData({
             strategyAddress: address(DAIStrategy),
-            harvester: keeper,
             minExpectedBalance: 0,
             minOutputAfterInvestment: 0,
             deadline: block.timestamp
